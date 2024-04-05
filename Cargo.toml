@@ -1,0 +1,10 @@
+[package]
+name = "networkext_sample"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+num = "0.4.1"
+num-derive = "0.4.2"
+num-traits = "0.2.18"
+sysinfo = "0.30.8"
