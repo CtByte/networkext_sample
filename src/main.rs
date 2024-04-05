@@ -48,27 +48,26 @@ fn get_ram_use(req_sys: &sysinfo::System) -> f32 {
 }
 
 // Get the total network (down) usage
-fn get_ntwk_dwn(req_net: &sysinfo::Networks) -> u64
-{
+fn get_ntwk_dwn(req_net: &sysinfo::Networks) -> u64 {
     // Get the total bytes recieved by every network interface
     let mut rcv_tot: Vec<u64> = Vec::new();
     for (_interface_name, ntwk) in req_net {
         rcv_tot.push(ntwk.received() as u64);
     }
-    
+
     rcv_tot.iter().sum()
     //let ntwk_processed = (ntwk_tot / 128) as i32;
 }
 
 // Get the total network (up) usage
-fn get_ntwk_up(req_net: &sysinfo::Networks) -> u64
-{
+fn get_ntwk_up(req_net: &sysinfo::Networks) -> u64 {
     // Get the total bytes recieved by every network interface
     let mut snd_tot: Vec<u64> = Vec::new();
     for (_interface_name, ntwk) in req_net {
+        //println!("{_interface_name}");
         snd_tot.push(ntwk.transmitted() as u64);
     }
-    
+
     snd_tot.iter().sum()
 }
 
@@ -83,44 +82,23 @@ fn main() {
         current_sys.refresh_all();
         current_net.refresh();
 
-        //let mut rcv_tot: Vec<u64> = Vec::new();
-        //let mut snd_tot: Vec<u64> = Vec::new();
-        //for (_interface_name, ntwk) in &current_net {
-        //    rcv_tot.push(ntwk.received() as u64);
-        //    snd_tot.push(ntwk.transmitted() as u64);
-        //}
-
-        //let ntwk_tot: u64 = rcv_tot.iter().sum();
-        //let ntwk_processed = (ntwk_tot / 1000) as u64; // bytes to kbits => /125
-        //let prnt_dwn = add_whitespace(format!("{:.1}", ntwk_processed), 5);
-
-        //let ntwk_tot_u: u64 = snd_tot.iter().sum();
-        //let ntwk_processed_u = (ntwk_tot_u / 1000) as u64;
-        //let prnt_up = add_whitespace(format!("{:.1}", ntwk_processed_u), 5);
-        
-        //println!(
-        //    "[DOWN: {} / {}]\t[UP: {} / {}]",
-        //    to_pretty_bytes(ntwk_tot, dur),
-        //    to_pretty_bits(ntwk_tot, dur),
-        //    to_pretty_bytes(ntwk_tot_u, dur),
-        //    to_pretty_bits(ntwk_tot_u, dur)
-        //);
-
         // Call each function to get all the values we need
         let cpu_avg = get_cpu_use(&current_sys);
         let ram_prcnt = get_ram_use(&current_sys);
-        let ntwk_dwn = get_ntwk_dwn(&current_net);        
+        let ntwk_dwn = get_ntwk_dwn(&current_net);
         let ntwk_up = get_ntwk_up(&current_net);
 
-        let prnt_cpu = add_whitespace(format!("{:.1}", cpu_avg), 5);
-        let prnt_ram = add_whitespace(format!("{:.1}", ram_prcnt), 5);
+        let prnt_cpu = add_whitespace(format!("{:.1} %", cpu_avg), 7);
+        let prnt_ram = add_whitespace(format!("{:.1} %", ram_prcnt), 7);
+        let prnt_down = add_whitespace(to_pretty_bytes(ntwk_dwn, dur), 10);
+        let prnt_up = add_whitespace(to_pretty_bytes(ntwk_up, dur), 10);
 
         println!(
-            "[RAM: {}] [CPU: {}] [DOWN: {}]\t[UP: {}]",
-            prnt_cpu,
+            "[RAM:{}] [CPU:{}] [DOWN:{}] [UP:{}]",
             prnt_ram,
-            to_pretty_bytes(ntwk_dwn, dur),
-            to_pretty_bytes(ntwk_up, dur)
+            prnt_cpu,
+            prnt_down, //to_pretty_bytes(ntwk_dwn, dur),
+            prnt_up    //to_pretty_bytes(ntwk_up, dur)
         );
 
         // Wait one second
@@ -155,10 +133,10 @@ fn to_pretty_bytes(input_in_bytes: u64, milliseconds: u64) -> String {
     let seconds = milliseconds as f32 / f32::powf(10.0, 3.0);
 
     let magnitude = input_in_bytes.ilog(1024);
-    
+
     let base: Option<DataUnit> = num::FromPrimitive::from_u32(magnitude);
     let result = (input_in_bytes as f32 / seconds) / ((1 as u64) << (magnitude * 10)) as f32;
-    
+
     match base {
         Some(DataUnit::B) => format!("{result:.2} B"),
         Some(unit) => format!("{result:.2} {unit}B"),
@@ -172,12 +150,12 @@ fn to_pretty_bits(input_in_bytes: u64, milliseconds: u64) -> String {
     }
 
     let seconds = milliseconds as f32 / f32::powf(10.0, 3.0);
-    
+
     let input = input_in_bytes * 8;
     let magnitude = input.ilog(1000);
     let base: Option<DataUnit> = num::FromPrimitive::from_u32(magnitude);
     let result = (input as f32 / seconds) / f32::powf(1000.0, magnitude as f32);
-    
+
     match base {
         Some(DataUnit::B) => format!("{result:.2} b"),
         Some(unit) => format!("{result:.2} {unit}b"),
