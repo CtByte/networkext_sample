@@ -125,15 +125,13 @@ impl fmt::Display for DataUnit {
     }
 }
 
-fn to_pretty_bytes(input_in_bytes: u64, milliseconds: u64) -> String {
+fn to_pretty_bytes(input_in_bytes: u64, timespan_in_ms: u64) -> String {
     if input_in_bytes < 1024 {
         return format!("0 KB");
     }
 
-    let seconds = milliseconds as f32 / f32::powf(10.0, 3.0);
-
+    let seconds = timespan_in_ms as f32 / f32::powf(10.0, 3.0);
     let magnitude = input_in_bytes.ilog(1024);
-
     let base: Option<DataUnit> = num::FromPrimitive::from_u32(magnitude);
     let result = (input_in_bytes as f32 / seconds) / ((1 as u64) << (magnitude * 10)) as f32;
 
@@ -144,14 +142,14 @@ fn to_pretty_bytes(input_in_bytes: u64, milliseconds: u64) -> String {
     }
 }
 
-fn to_pretty_bits(input_in_bytes: u64, milliseconds: u64) -> String {
+fn to_pretty_bits(input_in_bytes: u64, timespan_in_ms: u64) -> String {
     if input_in_bytes < 1000 {
         return format!("0 Kb");
     }
-
-    let seconds = milliseconds as f32 / f32::powf(10.0, 3.0);
-
+   
     let input = input_in_bytes * 8;
+
+    let seconds = timespan_in_ms as f32 / f32::powf(10.0, 3.0);
     let magnitude = input.ilog(1000);
     let base: Option<DataUnit> = num::FromPrimitive::from_u32(magnitude);
     let result = (input as f32 / seconds) / f32::powf(1000.0, magnitude as f32);
